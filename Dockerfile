@@ -1,7 +1,8 @@
 FROM python:3.7
 
 RUN pip install \
-  cloudflare
+  cloudflare \
+  twisted
 
 ADD . /src/
 
