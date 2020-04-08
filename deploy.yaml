@@ -13,7 +13,7 @@ metadata:
 data:
   cf-key: "CLOUDFLARE KEY"
   cf-email: "CLOUDFLARE EMAIL"
-  update-interval: "15"
+  update-interval: "300"
 
 ---
 apiVersion: v1
