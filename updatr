@@ -1,144 +1,145 @@
-#!/usr/bin/env python
-"""Cloudflare API code - example"""
+#!/usr/bin/python -u
 
-from __future__ import print_function
+DOMAIN_ANNOTATION = "flareupdatr.illallangi.enterprises/domain"
+IPIFY_ANNOTATION = "flareupdatr.illallangi.enterprises/ipify"
+EMAIL_ANNOTATION = "flareupdatr.illallangi.enterprises/email"
+KEY_ANNOTATION = "flareupdatr.illallangi.enterprises/key"
 
-import os
-import sys
-import re
-import json
-import requests
-import datetime
-from twisted.internet import task, reactor
 import CloudFlare
+import datetime
+import kubernetes
+import os
+import requests
+import sys
+import time 
 
-def my_ip_address(url):
-  print('%s  Getting IP address from %s' % (datetime.datetime.now().isoformat(), url))
+def main(argv):
+  starttime=time.time()
+  timeout = float(os.environ.get("UPDATE_INTERVAL", 300))
+  while True: 
+    flareUpdate()
+    sleep = max(0, timeout - ((time.time() - starttime) % timeout))
+    if sleep > 1:
+      print ('{0}    Sleeping {1:00.0f} seconds'.format(datetime.datetime.now().isoformat(), sleep)),
+      time.sleep(sleep)
+    print
+
+def flareUpdate():
   try:
-    ip_address = requests.get(url).text
+    if 'KUBERNETES_SERVICE_HOST' in os.environ:
+      kubernetes.config.load_incluster_config()
+    else:
+      kubernetes.config.load_kube_config()
+  except kubernetes.config.ConfigException as e:
+    exit("Cannot initialize kubernetes API, terminating.")
+      
+  ip_api_cache = {}
+  v1 = kubernetes.client.CoreV1Api()
+  services = v1.list_service_for_all_namespaces(watch=False)
+  for svc in services.items:
+    if svc is not None and svc.metadata is not None:
+      if svc.metadata.annotations is not None and DOMAIN_ANNOTATION in svc.metadata.annotations:
+        print ("{0}    Processing service {2} in namespace {1}:".format(datetime.datetime.now().isoformat(), svc.metadata.namespace, svc.metadata.name))
+        
+        if svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org") in ip_api_cache:
+          print ("{0}     - Using cached IP from {1}:".format(\
+            datetime.datetime.now().isoformat(), \
+            svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org"))),
+          ip = ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")]
+        else:
+          print ("{0}     - Getting IP from {1}:".format(\
+            datetime.datetime.now().isoformat(), \
+            svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org"))),
+          ip = ip_api( \
+            svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org"))
+          ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")] = ip
+        print ("{0}".format(ip))
+        
+        print ("{0}     - Updating {1} with email {2} and key {3}:".format(\
+          datetime.datetime.now().isoformat(), \
+          svc.metadata.annotations.get(DOMAIN_ANNOTATION), \
+          svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")), \
+          svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY")))),
+        cloudflare = cloudflare_api(\
+          ip, \
+          svc.metadata.annotations.get(DOMAIN_ANNOTATION), \
+          svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")), \
+          svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY")))
+        print ("%s" % cloudflare)
+
+def ip_api(url):
+  try:
+    ip = requests.get(url).text
   except:
     exit('%s: failed' % (url))
-  if ip_address == '':
+  if ip == '':
     exit('%s: failed' % (url))
+  return ip
 
-  if ':' in ip_address:
-    ip_address_type = 'AAAA'
-  else:
-    ip_address_type = 'A'
-
-  print('%s  IP Address is %s' % (datetime.datetime.now().isoformat(), ip_address))
+def cloudflare_api(ip_address, domain, email, token):
+  cf = CloudFlare.CloudFlare(email, token)
   
-  return ip_address, ip_address_type
-
-def do_dns_update(cf, zone_name, zone_id, domain, ip_address, ip_address_type):
-  """Cloudflare API code - example"""
+  host_name, zone_name = '.'.join(domain.split('.')[:2]), '.'.join(domain.split('.')[-2:])
 
   try:
-    params = {'name':domain, 'match':'all', 'type':ip_address_type}
+    params = {'name':zone_name}
+    zones = cf.zones.get(params=params)
+  except CloudFlare.exceptions.CloudFlareAPIError as e:
+    return ('/zones %d %s - api call failed' % (e, e))
+  except Exception as e:
+    return ('/zones.get - %s - api call failed' % (e))
+
+  if len(zones) == 0:
+    return ('/zones.get - %s - zone not found' % (zone_name))
+
+  if len(zones) != 1:
+    return ('/zones.get - %s - api call returned %d items' % (zone_name, len(zones)))
+
+  zone = zones[0]
+
+  zone_name = zone['name']
+  zone_id = zone['id']
+  
+  try:
+    params = {'name':domain, 'match':'all', 'type':'A'}
     dns_records = cf.zones.dns_records.get(zone_id, params=params)
   except CloudFlare.exceptions.CloudFlareAPIError as e:
-    exit('/zones/dns_records %s - %d %s - api call failed' % (domain, e, e))
+    return ('/zones/dns_records %s - %d %s - api call failed' % (domain, e, e))
 
   updated = False
 
   # update the record - unless it's already correct
   for dns_record in dns_records:
     old_ip_address = dns_record['content']
-    old_ip_address_type = dns_record['type']
-
-    if ip_address_type not in ['A', 'AAAA']:
-      # we only deal with A / AAAA records
-      continue
-
-    if ip_address_type != old_ip_address_type:
-      # only update the correct address type (A or AAAA)
-      # we don't see this becuase of the search params above
-      print('%s  Not updating %s: wrong address family' % (datetime.datetime.now().isoformat(), domain))
-      continue
 
     if ip_address == old_ip_address:
-      print('%s  Not updating %s: no change' % (datetime.datetime.now().isoformat(), domain))
-      updated = True
-      continue
+      return ('No Change')
 
     proxied_state = dns_record['proxied']
- 
-    # Yes, we need to update this record - we know it's the same address type
-
     dns_record_id = dns_record['id']
     dns_record = {
       'name':domain,
-      'type':ip_address_type,
+      'type':'A',
       'content':ip_address,
       'proxied':proxied_state
     }
     try:
       dns_record = cf.zones.dns_records.put(zone_id, dns_record_id, data=dns_record)
     except CloudFlare.exceptions.CloudFlareAPIError as e:
-      exit('/zones.dns_records.put %s - %d %s - api call failed' % (domain, e, e))
-    print('%s  Updated %s from %s to %s' % (datetime.datetime.now().isoformat(), domain, old_ip_address, ip_address))
-    updated = True
-
-  if updated:
-    return
+      return ('/zones.dns_records.put %s - %d %s - api call failed' % (domain, e, e))
+    return ('Updated from %s' % old_ip_address)
 
   # no exsiting dns record to update - so create dns record
   dns_record = {
     'name':domain,
-    'type':ip_address_type,
+    'type':'A',
     'content':ip_address
   }
   try:
     dns_record = cf.zones.dns_records.post(zone_id, data=dns_record)
   except CloudFlare.exceptions.CloudFlareAPIError as e:
-    exit('/zones.dns_records.post %s - %d %s - api call failed' % (domain, e, e))
-  print('%s  Created %s as %s' % (datetime.datetime.now().isoformat(), domain, ip_address))
+    return ('/zones.dns_records.post %s - %d %s - api call failed' % (domain, e, e))
+  return ('Created')
 
-def main_cron(domain, url_api):
-  """Cloudflare API code - example"""
-
-  host_name, zone_name = '.'.join(domain.split('.')[:2]), '.'.join(domain.split('.')[-2:])
-
-  cf = CloudFlare.CloudFlare()
-  
-  ip_address, ip_address_type = my_ip_address(url_api)
-
-  # grab the zone identifier
-  try:
-    params = {'name':zone_name}
-    zones = cf.zones.get(params=params)
-  except CloudFlare.exceptions.CloudFlareAPIError as e:
-    exit('/zones %d %s - api call failed' % (e, e))
-  except Exception as e:
-    exit('/zones.get - %s - api call failed' % (e))
-
-  if len(zones) == 0:
-    exit('/zones.get - %s - zone not found' % (zone_name))
-
-  if len(zones) != 1:
-    exit('/zones.get - %s - api call returned %d items' % (zone_name, len(zones)))
-
-  zone = zones[0]
-
-  zone_name = zone['name']
-  zone_id = zone['id']
-
-  do_dns_update(cf, zone_name, zone_id, domain, ip_address, ip_address_type)
-  pass
-  
-def main():
-  timeout = os.environ.get("CF_INTERVAL", 300)
-  url_api = os.environ.get("CF_URL_API", "https://api.ipify.org")
-  
-  try:
-    domain = os.environ['CF_DOMAIN']
-  except KeyError:
-    exit('set CF_DOMAIN environment variable')
-  
-  l = task.LoopingCall(main_cron, domain, url_api)
-  l.start(timeout) # call every sixty seconds
-  reactor.run()
-  exit(0)
-
-if __name__ == '__main__':
-  main()
+if __name__ == "__main__":
+  main(sys.argv)
