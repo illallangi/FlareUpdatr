@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!/usr/bin/env python
 
 DOMAIN_ANNOTATION = "flareupdatr.illallangi.enterprises/domain"
 IPIFY_ANNOTATION = "flareupdatr.illallangi.enterprises/ipify"
