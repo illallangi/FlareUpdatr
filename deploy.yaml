@@ -1,0 +1,91 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dns-system
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  namespace: dns-system
+  name: flareupdatr-cfg
+data:
+  cf-key: "CLOUDFLARE KEY"
+  cf-email: "CLOUDFLARE EMAIL"
+  update-interval: "15"
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flareupdatr
+  namespace: dns-system
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: flareupdatr
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flareupdatr
+subjects:
+  - kind: ServiceAccount
+    name: flareupdatr
+    namespace: dns-system
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: flareupdatr
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: dns-system
+  name: flareupdatr
+  labels:
+    app: flareupdatr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flareupdatr
+  template:
+    metadata:
+      labels:
+        app: flareupdatr
+    spec:
+      serviceAccountName: flareupdatr
+      containers:
+        - name: flareupdatr
+          image: docker.io/illallangi/flareupdatr:latest
+          env:
+            - name: CF_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: flareupdatr-cfg
+                  key: cf-key
+            - name: CF_EMAIL
+              valueFrom:
+                configMapKeyRef:
+                  name: flareupdatr-cfg
+                  key: cf-email
+            - name: UPDATE_INTERVAL
+              valueFrom:
+                configMapKeyRef:
+                  name: flareupdatr-cfg
+                  key: update-interval
