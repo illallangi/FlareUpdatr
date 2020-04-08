@@ -11,4 +11,4 @@ RUN pip install \
 
 ADD . /src/
 
-CMD /src/updatr
+CMD /src/operator
