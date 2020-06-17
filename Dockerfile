@@ -16,4 +16,4 @@ ADD . /usr/src/app
 
 RUN pip3 install .
 
-ENTRYPOINT ["/usr/local/bin/flare-updater"]
+ENTRYPOINT ["/usr/local/bin/flare-updatr"]
