@@ -1,5 +1,4 @@
-FROM python:3.8.3-alpine
-LABEL maintainer="Andrew Cole <andrew.cole@illallangi.com>"
+FROM docker.io/library/python:3.8.3-alpine
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
@@ -17,3 +16,18 @@ ADD . /usr/src/app
 RUN pip3 install .
 
 ENTRYPOINT ["/usr/local/bin/flare-updatr"]
+
+ARG VCS_REF
+ARG VERSION
+ARG BUILD_DATE
+LABEL maintainer="Andrew Cole <andrew.cole@illallangi.com>" \
+      org.label-schema.build-date=${BUILD_DATE} \
+      org.label-schema.description="Updates CloudFlare DNS entries based on attributes on kubernetes Services" \
+      org.label-schema.name="FlareUpdatr" \
+      org.label-schema.schema-version="1.0" \
+      org.label-schema.url="http://github.com/illallangi/FlareUpdatr" \
+      org.label-schema.usage="https://github.com/illallangi/FlareUpdatr/blob/master/README.md" \
+      org.label-schema.vcs-ref=$VCS_REF \
+      org.label-schema.vcs-url="https://github.com/illallangi/FlareUpdatr" \
+      org.label-schema.vendor="Illallangi Enterprises" \
+      org.label-schema.version=$VERSION
