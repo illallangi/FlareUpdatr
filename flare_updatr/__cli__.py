@@ -13,7 +13,7 @@ import requests
 import sys
 import time 
 
-def main(argv):
+def main():
   starttime=time.time()
   timeout = float(os.environ.get("UPDATE_INTERVAL", 300))
   while True: 
@@ -141,4 +141,4 @@ def cloudflare_api(ip_address, domain, email, token):
   return ('Created')
 
 if __name__ == "__main__":
-  main(sys.argv)
+  main()

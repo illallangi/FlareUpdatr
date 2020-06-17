@@ -1,14 +1,19 @@
-FROM python:3.7
+FROM python:3.8.3-alpine
+LABEL maintainer="Andrew Cole <andrew.cole@illallangi.com>"
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONIOENCODING=UTF-8 \
     LC_ALL=en_US.UTF-8 \
-    LANG=en_US.UTF-8
+    LANG=en_US.UTF-8 \
+    XDG_CONFIG_HOME=/config
 
-RUN pip install \
-  cloudflare \
-  kubernetes
+WORKDIR /usr/src/app
 
-ADD . /src/
+ADD requirements.txt requirements.txt
+RUN pip3 install -r requirements.txt
 
-CMD /src/operator
+ADD . /usr/src/app
+
+RUN pip3 install .
+
+ENTRYPOINT ["/usr/local/bin/flare-updatr"]
