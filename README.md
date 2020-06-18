@@ -1,4 +1,7 @@
 # FlareUpdatr
+[![Docker Pulls](https://img.shields.io/docker/pulls/illallangi/flareupdatr.svg)](https://hub.docker.com/r/illallangi/flareupdatr)
+[![Image Size](https://images.microbadger.com/badges/image/illallangi/flareupdatr.svg)](https://microbadger.com/images/illallangi/flareupdatr)
+![Build](https://github.com/illallangi/FlareUpdatr/workflows/Build/badge.svg)
 
 Updates CloudFlare DNS entries based on attributes on kubernetes Services.
 
