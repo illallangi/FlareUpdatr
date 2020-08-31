@@ -33,7 +33,7 @@ def flareUpdate():
             kubernetes.config.load_incluster_config()
         else:
             kubernetes.config.load_kube_config()
-    except kubernetes.config.ConfigException as e:
+    except kubernetes.config.ConfigException:
         exit("Cannot initialize kubernetes API, terminating.")
 
     ip_api_cache = {}
@@ -84,7 +84,7 @@ def ip_api(url):
 def cloudflare_api(ip_address, domain, email, token):
     cf = CloudFlare.CloudFlare(email, token)
 
-    host_name, zone_name = '.'.join(domain.split('.')[:2]), '.'.join(domain.split('.')[-2:])
+    zone_name = '.'.join(domain.split('.')[-2:])
 
     try:
         params = {'name': zone_name}
