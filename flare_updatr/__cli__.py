@@ -17,7 +17,7 @@ KEY_ANNOTATION = "flareupdatr.illallangi.enterprises/key"
 
 
 def main():
-    starttime=time.time()
+    starttime = time.time()
     timeout = float(os.environ.get("UPDATE_INTERVAL", 300))
     while True:
         flareUpdate()
