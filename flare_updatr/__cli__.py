@@ -81,7 +81,7 @@ def cloudflare_api(ip_address, domain, email, token):
     host_name, zone_name = '.'.join(domain.split('.')[:2]), '.'.join(domain.split('.')[-2:])
 
     try:
-        params = {'name':zone_name}
+        params = {'name': zone_name}
         zones = cf.zones.get(params=params)
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         return ('/zones %d %s - api call failed' % (e, e))
@@ -100,7 +100,7 @@ def cloudflare_api(ip_address, domain, email, token):
     zone_id = zone['id']
     
     try:
-        params = {'name':domain, 'match':'all', 'type':'A'}
+        params = {'name': domain, 'match': 'all', 'type': 'A'}
         dns_records = cf.zones.dns_records.get(zone_id, params=params)
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         return ('/zones/dns_records %s - %d %s - api call failed' % (domain, e, e))
@@ -117,10 +117,10 @@ def cloudflare_api(ip_address, domain, email, token):
         proxied_state = dns_record['proxied']
         dns_record_id = dns_record['id']
         dns_record = {
-            'name':domain,
-            'type':'A',
-            'content':ip_address,
-            'proxied':proxied_state
+            'name': domain,
+            'type': 'A',
+            'content': ip_address,
+            'proxied': proxied_state
         }
         try:
             dns_record = cf.zones.dns_records.put(zone_id, dns_record_id, data=dns_record)
@@ -130,9 +130,9 @@ def cloudflare_api(ip_address, domain, email, token):
 
     # no exsiting dns record to update - so create dns record
     dns_record = {
-        'name':domain,
-        'type':'A',
-        'content':ip_address
+        'name': domain,
+        'type': 'A',
+        'content': ip_address
     }
     try:
         dns_record = cf.zones.dns_records.post(zone_id, data=dns_record)
