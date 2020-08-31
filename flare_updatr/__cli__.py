@@ -3,7 +3,7 @@
 import datetime
 import os
 import sys
-import time 
+import time
 
 import CloudFlare
 
@@ -20,7 +20,7 @@ KEY_ANNOTATION = "flareupdatr.illallangi.enterprises/key"
 def main():
     starttime=time.time()
     timeout = float(os.environ.get("UPDATE_INTERVAL", 300))
-    while True: 
+    while True:
         flareUpdate()
         sleep = max(0, timeout - ((time.time() - starttime) % timeout))
         if sleep > 1:
@@ -35,7 +35,7 @@ def flareUpdate():
             kubernetes.config.load_kube_config()
     except kubernetes.config.ConfigException as e:
         exit("Cannot initialize kubernetes API, terminating.")
-            
+
     ip_api_cache = {}
     v1 = kubernetes.client.CoreV1Api()
     services = v1.list_service_for_all_namespaces(watch=False)
@@ -43,7 +43,7 @@ def flareUpdate():
         if svc is not None and svc.metadata is not None:
             if svc.metadata.annotations is not None and DOMAIN_ANNOTATION in svc.metadata.annotations:
                 print("{0}        Processing service {2} in namespace {1}: ".format(datetime.datetime.now().isoformat(), svc.metadata.namespace, svc.metadata.name), flush=True)
-                
+
                 if svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org") in ip_api_cache:
                     print("{0}         - Using cached IP from {1}: ".format(
                         datetime.datetime.now().isoformat(),
@@ -57,7 +57,7 @@ def flareUpdate():
                         svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org"))
                     ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")] = ip
                 print("{0}".format(ip), flush=True)
-                
+
                 print("{0}         - Updating {1} with email {2} and key {3}: ".format(
                     datetime.datetime.now().isoformat(),
                     svc.metadata.annotations.get(DOMAIN_ANNOTATION),
@@ -81,7 +81,7 @@ def ip_api(url):
 
 def cloudflare_api(ip_address, domain, email, token):
     cf = CloudFlare.CloudFlare(email, token)
-    
+
     host_name, zone_name = '.'.join(domain.split('.')[:2]), '.'.join(domain.split('.')[-2:])
 
     try:
@@ -102,7 +102,7 @@ def cloudflare_api(ip_address, domain, email, token):
 
     zone_name = zone['name']
     zone_id = zone['id']
-    
+
     try:
         params = {'name': domain, 'match': 'all', 'type': 'A'}
         dns_records = cf.zones.dns_records.get(zone_id, params=params)
