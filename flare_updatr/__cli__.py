@@ -43,12 +43,12 @@ def flareUpdate():
                 if svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org") in ip_api_cache:
                     print("{0}         - Using cached IP from {1}: ".format(\
                         datetime.datetime.now().isoformat(), \
-                        svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")), end = '', flush=True)
+                        svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")), end='', flush=True)
                     ip = ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")]
                 else:
                     print("{0}         - Getting IP from {1}: ".format(\
                         datetime.datetime.now().isoformat(), \
-                        svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")), end = '', flush=True)
+                        svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")), end='', flush=True)
                     ip = ip_api( \
                         svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org"))
                     ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")] = ip
@@ -58,7 +58,7 @@ def flareUpdate():
                     datetime.datetime.now().isoformat(), \
                     svc.metadata.annotations.get(DOMAIN_ANNOTATION), \
                     svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")), \
-                    svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY"))), end = '', flush=True)
+                    svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY"))), end='', flush=True)
                 cloudflare = cloudflare_api(\
                     ip, \
                     svc.metadata.annotations.get(DOMAIN_ANNOTATION), \
