@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
-import CloudFlare
 import datetime
-import kubernetes
 import os
-import requests
 import sys
 import time 
+
+import CloudFlare
+
+import kubernetes
+
+import requests
 
 DOMAIN_ANNOTATION = "flareupdatr.illallangi.enterprises/domain"
 IPIFY_ANNOTATION = "flareupdatr.illallangi.enterprises/ipify"
