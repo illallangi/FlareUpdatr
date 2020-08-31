@@ -74,7 +74,7 @@ def flareUpdate():
 def ip_api(url):
     try:
         ip = requests.get(url).text
-    except:
+    except BaseException:
         exit('%s: failed' % (url))
     if ip == '':
         exit('%s: failed' % (url))
@@ -110,8 +110,6 @@ def cloudflare_api(ip_address, domain, email, token):
         dns_records = cf.zones.dns_records.get(zone_id, params=params)
     except CloudFlare.exceptions.CloudFlareAPIError as e:
         return ('/zones/dns_records %s - %d %s - api call failed' % (domain, e, e))
-
-    updated = False
 
     # update the record - unless it's already correct
     for dns_record in dns_records:
