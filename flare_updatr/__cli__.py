@@ -45,28 +45,28 @@ def flareUpdate():
                 print("{0}        Processing service {2} in namespace {1}: ".format(datetime.datetime.now().isoformat(), svc.metadata.namespace, svc.metadata.name), flush=True)
                 
                 if svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org") in ip_api_cache:
-                    print("{0}         - Using cached IP from {1}: ".format(\
-                        datetime.datetime.now().isoformat(), \
+                    print("{0}         - Using cached IP from {1}: ".format(
+                        datetime.datetime.now().isoformat(),
                         svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")), end='', flush=True)
                     ip = ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")]
                 else:
-                    print("{0}         - Getting IP from {1}: ".format(\
-                        datetime.datetime.now().isoformat(), \
+                    print("{0}         - Getting IP from {1}: ".format(
+                        datetime.datetime.now().isoformat(),
                         svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")), end='', flush=True)
-                    ip = ip_api( \
+                    ip = ip_api(
                         svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org"))
                     ip_api_cache[svc.metadata.annotations.get(IPIFY_ANNOTATION, "https://api.ipify.org")] = ip
                 print("{0}".format(ip), flush=True)
                 
-                print("{0}         - Updating {1} with email {2} and key {3}: ".format(\
-                    datetime.datetime.now().isoformat(), \
-                    svc.metadata.annotations.get(DOMAIN_ANNOTATION), \
-                    svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")), \
+                print("{0}         - Updating {1} with email {2} and key {3}: ".format(
+                    datetime.datetime.now().isoformat(),
+                    svc.metadata.annotations.get(DOMAIN_ANNOTATION),
+                    svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")),
                     svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY"))), end='', flush=True)
-                cloudflare = cloudflare_api(\
-                    ip, \
-                    svc.metadata.annotations.get(DOMAIN_ANNOTATION), \
-                    svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")), \
+                cloudflare = cloudflare_api(
+                    ip,
+                    svc.metadata.annotations.get(DOMAIN_ANNOTATION),
+                    svc.metadata.annotations.get(EMAIL_ANNOTATION, os.environ.get("CF_EMAIL")),
                     svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY")))
                 print("%s" % cloudflare, flush=True)
 
