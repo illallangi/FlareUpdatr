@@ -26,6 +26,7 @@ def main():
             print('{0}        Sleeping {1:00.0f} seconds'.format(datetime.datetime.now().isoformat(), sleep), flush=True)
             time.sleep(sleep)
 
+
 def flareUpdate():
     try:
         if 'KUBERNETES_SERVICE_HOST' in os.environ:
@@ -69,6 +70,7 @@ def flareUpdate():
                     svc.metadata.annotations.get(KEY_ANNOTATION, os.environ.get("CF_KEY")))
                 print("%s" % cloudflare, flush=True)
 
+
 def ip_api(url):
     try:
         ip = requests.get(url).text
@@ -77,6 +79,7 @@ def ip_api(url):
     if ip == '':
         exit('%s: failed' % (url))
     return ip
+
 
 def cloudflare_api(ip_address, domain, email, token):
     cf = CloudFlare.CloudFlare(email, token)
