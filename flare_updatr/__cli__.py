@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-DOMAIN_ANNOTATION = "flareupdatr.illallangi.enterprises/domain"
-IPIFY_ANNOTATION = "flareupdatr.illallangi.enterprises/ipify"
-EMAIL_ANNOTATION = "flareupdatr.illallangi.enterprises/email"
-KEY_ANNOTATION = "flareupdatr.illallangi.enterprises/key"
-
 import CloudFlare
 import datetime
 import kubernetes
@@ -12,6 +7,12 @@ import os
 import requests
 import sys
 import time 
+
+DOMAIN_ANNOTATION = "flareupdatr.illallangi.enterprises/domain"
+IPIFY_ANNOTATION = "flareupdatr.illallangi.enterprises/ipify"
+EMAIL_ANNOTATION = "flareupdatr.illallangi.enterprises/email"
+KEY_ANNOTATION = "flareupdatr.illallangi.enterprises/key"
+
 
 def main():
     starttime=time.time()
