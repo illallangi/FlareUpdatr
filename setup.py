@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="flare-updatr-illallangi", # Replace with your own username
+    name="flare-updatr-illallangi",
     version="0.0.1",
     author="Andrew Cole",
     author_email="andrew.cole@illallangi.com",
